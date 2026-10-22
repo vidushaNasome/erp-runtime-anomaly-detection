@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code
+.vscode/
+
+# Logs
+logs/
+*.log
+
+# Odoo generated files
+*.pid
+*.session
+
+# PostgreSQL data
+postgres/
+db/
+data/
+
+# Docker volumes
+volumes/
+
+# Environment files
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# PyCharm
+.idea/
+
+# Temporary files
+*.tmp
+*.bak
+
+# Odoo filestore
+filestore/
+
+# Python virtual environments
+venv/
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+files/
+

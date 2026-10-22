@@ -1,0 +1,53 @@
+<odoo>
+
+    <record id="view_trace_generator_wizard_form" model="ir.ui.view">
+        <field name="name">trace.generator.wizard.form</field>
+        <field name= "model">trace.generator.wizard</field>
+        <field name= "arch" type="xml">
+            <form string="Runtime Trace Generator">
+                <group>
+                    <field name ="scenario"/>
+                    <field name ="trace_quantity"/>
+                </group>
+
+                <group string="Experimental Configuration">
+                    <field name="dataset_id"/>
+                    <field name="generation_seed"/>
+                    <field name="variant_id"/>
+                </group>
+
+                <footer>
+                    <button name="action_setup_master_data"
+                            string="Setup Master Data"
+                            type="object"
+                            class="btn-secondary"/>
+
+                    <button name="action_generate_traces"
+                            string="Generate Traces"
+                            type= "object"
+                            class="btn-primary"/>
+                            
+
+                    <button  string="Cancel"
+                            special="cancel"
+                            class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_trace_generator_wizard" model="ir.actions.act_window">
+        <field name= "name">Runtime Trace Generator</field>
+        <field name= "res_model">trace.generator.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_trace_generator_wizard_form"/>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_runtime_trace_generator"
+          name= "Runtime Trace Generator"
+          parent= "purchase.menu_purchase_root"
+          action="action_trace_generator_wizard"
+          sequence ="100"/>
+
+</odoo>
