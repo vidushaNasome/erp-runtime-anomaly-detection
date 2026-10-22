@@ -1,10 +1,6 @@
 un/pw
 pdb/odoo
 
-cd ml-identifying
-docker compose down -v
-docker compose up --build -d
-
 cd data-gathering
 docker compose down -v
 docker compose up --build -d
