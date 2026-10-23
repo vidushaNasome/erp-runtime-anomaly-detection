@@ -1,6 +1,6 @@
 un/pw
 pdb/odoo
 
-cd data-gathering
+cd ml-data-collection
 docker compose down -v
 docker compose up --build -d

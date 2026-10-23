@@ -269,6 +269,7 @@ class ERPTraceGenerator(models.AbstractModel):
                         "dataset_id": dataset_id,
                         "generation_seed": generation_seed,
                         "variant_id": variant_id,
+                        "release_version" : "V1.0",
                  })
 
     
@@ -279,105 +280,184 @@ class ERPTraceGenerator(models.AbstractModel):
     @api.model
     def generate_n2(self, count, dataset_id, generation_seed, variant_id):
 
-            rng = random.Random(generation_seed)
-            
-            PurchaseOrder = self.env["purchase.order"]
-    
-            master = self.setup__master_data()
-    
-            vendors = [master["vendor_a"] , master["vendor_b"]]
-            products = [master["product_1"], master["product_2"]]
-    
-            users = [
-                master["purchase_user_1"],
-                master["purchase_user_2"],
-                master["purchase_manager"] ,
-            ]
-    
-            manager = master["purchase_manager"]
-    
-            for i in range(1, count + 1):
-    
-                creator_user = rng.choice(users)
-                confirmer_user = rng.choice(users)
-    
-                vendor = rng.choice(vendors)
-                product   = rng.choice(products)
-    
-                base_date  = datetime(2026, 1, 1, 9, 0)
-    
-                order_date = base_date - timedelta(
-                    minutes=rng.randint(1, 30)
+        rng = random.Random(generation_seed)
+
+        PurchaseOrder = self.env["purchase.order"]
+        Picking = self.env["stock.picking"]
+
+        master = self.setup__master_data()
+
+        vendors = [master["vendor_a"], master["vendor_b"]]
+        products = [master["product_1"], master["product_2"]]
+
+        users = [
+            master["purchase_user_1"],
+            master["purchase_user_2"],
+            master["purchase_manager"],
+        ]
+
+        manager = master["purchase_manager"]
+
+        variants = [
+            ["V1", "V2", "V3"][i % 3]
+            for i in range(count)
+        ]
+        rng.shuffle(variants)
+
+        for i in range(1, count + 1):
+
+            receipt_variant = variants[i - 1]
+
+            creator_user = rng.choice(users)
+            confirmer_user = rng.choice(users)
+
+            vendor = rng.choice(vendors)
+            product = rng.choice(products)
+
+            base_date = datetime(2026, 1, 1, 9, 0)
+
+            order_date = base_date + timedelta(
+                days=rng.randint(0, 60),
+                hours=rng.randint(0, 23),
+                minutes=rng.randint(0, 59),
+            )
+
+            delay_days = self._get_vendor_delay(vendor, product)
+            expected_arrival = order_date + timedelta(days=delay_days)
+
+            ordered_qty = rng.randint(10, 2000)
+
+            po = PurchaseOrder.with_user(creator_user).create({
+                "partner_id": vendor.id,
+                "origin": f"N2-{i}",
+                "date_order": order_date,
+                "order_line": [(0, 0, {
+                    "product_id": product.id,
+                    "name": product.display_name,
+                    "product_qty": ordered_qty,
+                    "price_unit": rng.choice(
+                        [10.0, 12.5, 15.0, 20.0, 25.0]
+                    ),
+                    "date_planned": expected_arrival,
+                    "product_uom": (
+                        product.uom_po_id.id or product.uom_id.id
+                    ),
+                })],
+            })
+
+            po.with_user(confirmer_user).button_confirm()
+
+            if receipt_variant == "V1":
+
+                first_qty = rng.randint(1, ordered_qty - 1)
+                receipt_quantities = [first_qty]
+
+            elif receipt_variant == "V2":
+
+                first_qty = rng.randint(1, ordered_qty - 2)
+                second_qty = rng.randint(
+                    1, ordered_qty - first_qty - 1
                 )
-    
-                delay_days = self._get_vendor_delay(vendor, product)
-                expected_arrival  = order_date + timedelta(days=delay_days)
-    
-                ordered_qty  = rng.randint(10, 2000)
-    
-                po = PurchaseOrder.with_user(creator_user).create({
-                    "partner_id": vendor.id,
-                    "origin": f"N2-{i}",
-                    "date_order": order_date,
-                    "order_line": [(0, 0, {
-                        "product_id": product.id,
-                        "name": product.display_name,
-                        "product_qty": ordered_qty,
-                        "price_unit": rng.choice([10.0, 12.5, 15.0, 20.0, 25.0]),
-                        "date_planned": expected_arrival,
-                        "product_uom": product.uom_po_id.id or product.uom_id.id,
-                    })],
-                })
-    
-                po.with_user(confirmer_user).button_confirm()
-    
-                picking   = po.picking_ids.filtered(lambda p: p.state not in ["done", "cancel"])[:1]
-    
+
+                receipt_quantities = [
+                    first_qty,
+                    second_qty,
+                ]
+
+            else:
+
+                first_qty = rng.randint(1, ordered_qty - 1)
+
+                receipt_quantities = [
+                    first_qty,
+                    ordered_qty - first_qty,
+                ]
+
+            previous_picking = None
+
+            for receipt_qty in receipt_quantities:
+
+                if previous_picking:
+
+                    picking = Picking.search([
+                        ("backorder_id", "=", previous_picking.id),
+                        ("state", "not in", ["done", "cancel"]),
+                    ], order="id desc", limit=1)
+
+                else:
+
+                    picking = po.picking_ids.filtered(
+                        lambda p: p.state not in ["done", "cancel"]
+                    )[:1]
+
                 if picking:
-                    picking  = picking.with_user(manager)
-    
-                    if picking.state  == "draft":
+
+                    picking = picking.with_user(manager)
+
+                    if picking.state == "draft":
                         picking.action_confirm()
-    
-                    if picking.state in ["confirmed", "waiting", "assigned"]:
+
+                    if picking.state in [
+                        "confirmed", "waiting", "assigned"
+                    ]:
                         picking.action_assign()
-    
-                    partial_qty  = rng.randint(1, max(1, ordered_qty - 1))
-    
-                    for move in picking.move_ids_without_package :
-                        move_quantity =  partial_qty
-    
+
+                    for move in picking.move_ids_without_package:
+
+                        move_quantity = receipt_qty
+
                         if move.move_line_ids:
+
                             for move_line in move.move_line_ids:
+
                                 if "quantity" in move_line._fields:
-                                    move_line.write({"quantity":  move_quantity})
+                                    move_line.write({
+                                        "quantity": move_quantity
+                                    })
+
                                 elif "qty_done" in move_line._fields:
-                                    move_line.write({"qty_done": move_quantity})
+                                    move_line.write({
+                                        "qty_done": move_quantity
+                                    })
+
                         else:
+
                             move._set_quantity_done(move_quantity)
-    
+
                     result = picking.button_validate()
-    
-                    if isinstance(result, dict) and result.get("res_model") == "stock.backorder.confirmation":
-                        wizard = self.env["stock.backorder.confirmation"].with_context(
+
+                    if (
+                        isinstance(result, dict)
+                        and result.get("res_model")
+                        == "stock.backorder.confirmation"
+                    ):
+
+                        wizard = self.env[
+                            "stock.backorder.confirmation"
+                        ].with_context(
                             result.get("context", {})
                         ).create({
                             "pick_ids": [(6, 0, picking.ids)]
                         })
+
                         wizard.process()
 
-                self.env["erp.runtime.trace"].sudo().search([
-                    ("transaction_id", "=", po.name)
-                ]).write({
-                    "flow_id": "N2",
-                    "label": "normal",
-                    "is_anomaly": False,
-                    "dataset_id": dataset_id,
-                    "generation_seed": generation_seed,
-                    "variant_id": variant_id,
-                                 })
-    
-            return True
+                    previous_picking = picking
+
+            self.env["erp.runtime.trace"].sudo().search([
+                ("transaction_id", "=", po.name)
+            ]).write({
+                "flow_id": "N2",
+                "label": "normal",
+                "is_anomaly": False,
+                "dataset_id": dataset_id,
+                "generation_seed": generation_seed,
+                "variant_id": variant_id,
+                "release_version" : "V1.0",
+            })
+
+        return True
+
 
     # Authorised supplier (Vendor) change
     @api.model
@@ -476,6 +556,7 @@ class ERPTraceGenerator(models.AbstractModel):
                                     "dataset_id": dataset_id,
                                     "generation_seed": generation_seed,
                                     "variant_id": variant_id,
+                                    "release_version" : "V1.0",
                                                  })
     
             return True
@@ -565,6 +646,7 @@ class ERPTraceGenerator(models.AbstractModel):
                                     "dataset_id": dataset_id,
                                     "generation_seed": generation_seed,
                                     "variant_id": variant_id,
+                                    "release_version": "V1.0",
                                                  })
     
             return True
@@ -714,6 +796,7 @@ class ERPTraceGenerator(models.AbstractModel):
                                 "dataset_id": dataset_id,
                                 "generation_seed": generation_seed,
                                 "variant_id": variant_id,
+                                "release_version" : "V1.0",
                                              })
 
         return True
@@ -802,7 +885,7 @@ class ERPTraceGenerator(models.AbstractModel):
                 ("transaction_id", "=", po.name)
             ]).write({
                 "flow_id" : "A1",
-                "release_version" : "test_extreme_qty",
+                "release_version" : "V1.0",
                 "label": "anomaly",
                 "is_anomaly": True,
                 "dataset_id": dataset_id,
@@ -910,7 +993,7 @@ class ERPTraceGenerator(models.AbstractModel):
                 ("transaction_id", "=", po.name),
             ]).write({
                 "flow_id": "A2",
-                "release_version": "Bill creation incorrectly updates Expected Arrival",
+                "release_version" : "V1.0",
                 "label": "anomaly",
                 "is_anomaly": True,
                 "dataset_id": dataset_id,
@@ -934,8 +1017,6 @@ class ERPTraceGenerator(models.AbstractModel):
         vendors  = [master["vendor_a"], master["vendor_b"]]
         products   = [master["product_1"], master["product_2"]]
         manager = master["purchase_manager"]
-
-        # Allowing to change the order OR A3.
 
         for product in products:
             product.with_user(manager).write({
@@ -1020,7 +1101,7 @@ class ERPTraceGenerator(models.AbstractModel):
                 ("transaction_id", "=", po.name),
             ]).write({
                 "flow_id": "A3",
-                "release_version": "Vendor Bill created before Goods Receipt",
+                "release_version" : "V1.0",
                 "label": "anomaly",
                 "is_anomaly": True,
                 "dataset_id": dataset_id,
@@ -1081,7 +1162,7 @@ class ERPTraceGenerator(models.AbstractModel):
                 ("transaction_id", "=", po.name),
             ]).write({
                 "flow_id": "A4",
-                "release_version": "Performance regression: redundant nested-loop writes after PO confirmation",
+                "release_version" : "V1.0",
                 "label": "anomaly",
                 "is_anomaly": True,
                 "dataset_id": dataset_id,

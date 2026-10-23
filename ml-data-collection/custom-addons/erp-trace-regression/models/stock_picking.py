@@ -8,6 +8,52 @@ class StockPicking(models.Model):
     def button_validate(self):
         result = super().button_validate()
 
+        for picking in self:
+            if picking.picking_type_code != "incoming":
+                continue
+
+            po = picking.purchase_id
+            if not po:
+                continue
+
+            # Only log completed receipts
+            if picking.state != "done":
+                continue
+
+            ordered_qty = sum(
+                po.order_line.mapped("product_qty")
+            )
+
+            received_qty = sum(
+                po.order_line.mapped("qty_received")
+            )
+
+            if received_qty == 0:
+                receipt_bucket = "NONE"
+            elif received_qty < ordered_qty:
+                receipt_bucket = "PARTIAL"
+            elif received_qty == ordered_qty:
+                receipt_bucket = "FULL"
+            else:
+                receipt_bucket = "EXCESS"
+
+            self.env["erp.runtime.trace"].sudo().log_trace(
+                transaction_id=po.name,
+                user_role="inventory_manager",
+                module="stock",
+                function_name="stock.picking.button_validate",
+                table_name="stock.picking",
+                field_changed="receipt_type",
+                action="OUTCOME",
+                old_value="",
+                new_value=receipt_bucket,
+                trigger_source="business_outcome",
+                release_version=None,
+                flow_id=None,
+                label="normal",
+            )
+
+
         # A5BUG: start
         # Goods receipt incorectly changes the purchase order vendor.....
         if self.env.context.get("runtime_scenario") == "A5_VENDOR_CHANGE":

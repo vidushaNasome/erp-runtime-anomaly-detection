@@ -15,10 +15,7 @@ class ERPRuntimeTrace(models.Model):
     index=True,
     )
 
-    scenario_id = fields.Char(
-    string="Scenario ID",
-    index=True,
-    )
+    
 
     generation_seed = fields.Integer(
     string="Generation Seed",
