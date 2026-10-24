@@ -168,112 +168,130 @@ class ERPTraceGenerator(models.AbstractModel):
             "product_2": product_2  ,
         }
 
+    
     # Standard procurement
     @api.model
     def generate_n1(self, count, dataset_id, generation_seed, variant_id):
 
-            rng = random.Random(generation_seed)
+        rng = random.Random(generation_seed)
 
-            PurchaseOrder = self.env["purchase.order"]
-    
-            master = self.setup__master_data()
-    
-            vendors = [master["vendor_a"], master["vendor_b"]]
-            products = [master["product_1"], master["product_2"]]
-    
-            manager = master["purchase_manager"]
-    
-            for product in products:
-                product.with_user(manager).write({
-                    "purchase_method": "receive" ,
-                })
-    
-            for i in range(1, count + 1) :
-    
-                vendor = rng.choice(vendors)
-    
-                base_date = datetime(2026, 1, 1, 9, 0)
-    
-                order_date = base_date + timedelta(
-                    days=rng.randint(0, 60) ,
-                    hours=rng.randint(0, 23) ,
-                    minutes=rng.randint(0, 59),
-                )
-    
-                line_count = rng.randint(1, 3)
-    
-                selected_products = [
-                    rng.choice(products)
-                    for _ in range(line_count)
-                ]
-    
-                product_delays = [
-                    self._get_vendor_delay(vendor, product)
-                    for product in selected_products
-                ]
-    
-                min_delay_days = min(product_delays)
-                expected_arrival  = order_date + timedelta(days=min_delay_days)
-    
-                order_lines = []
-    
-                for product in selected_products:
-                    quantity = rng.randint(1, 2000)
-                    price = rng.choice([10.0, 12.5, 15.0, 20.0, 25.0])
-    
-                    order_lines.append((0, 0, {
-                        "product_id": product.id,
-                        "name": product.display_name,
-                        "product_qty" : quantity,
-                        "price_unit": price,
-                        "date_planned": expected_arrival,
-                        "product_uom": product.uom_po_id.id or product.uom_id.id,
-                    }))
-    
-                po = PurchaseOrder.with_user(manager).create({
-                    "partner_id": vendor.id,
-                    "origin" : f"N1-{i}",
-                    "date_order": order_date,
-                    "order_line": order_lines,
-                })
-    
-                if rng.random() < 0.7:
-                    po.with_user(manager).print_quotation()
-    
-                po.with_user(manager).button_confirm()
-    
-                for picking in po.picking_ids :
-                    picking.with_user(manager).action_confirm()
-                    picking.with_user(manager).action_assign()
-    
-                    for move in picking.move_ids_without_package :
-                        move.with_user(manager).quantity = move.product_uom_qty
-    
-                    picking.with_user(manager).button_validate()
-    
-                action  = po.with_user(manager).action_create_invoice()
-                bill = self.env["account.move"].with_user(manager).browse(action["res_id"])
-    
-                bill.with_user(manager).write({
-                    "invoice_date": expected_arrival.date(),
-                })
-    
-                bill.with_user(manager).action_post()
+        PurchaseOrder = self.env["purchase.order"]
 
-                self.env["erp.runtime.trace"].sudo().search([
-                    ("transaction_id", "=", po.name)
-                ]).write({
-                        "flow_id": "N1",
-                        "label": "normal",
-                        "is_anomaly": False,
-                        "dataset_id": dataset_id,
-                        "generation_seed": generation_seed,
-                        "variant_id": variant_id,
-                        "release_version" : "V1.0",
-                 })
+        master = self.setup__master_data()
 
-    
-            return True
+        vendors = [master["vendor_a"], master["vendor_b"]]
+        products = [master["product_1"], master["product_2"]]
+
+        manager = master["purchase_manager"]
+
+        for product in products:
+            product.with_user(manager).write({
+                "purchase_method": "receive",
+            })
+
+        for i in range(1, count + 1):
+
+            vendor = rng.choice(vendors)
+
+            base_date = datetime(2026, 1, 1, 9, 0)
+
+            order_date = base_date + timedelta(
+                days=rng.randint(0, 60),
+                hours=rng.randint(0, 23),
+                minutes=rng.randint(0, 59),
+            )
+
+            
+            line_count = rng.randint(1, 2)
+
+            selected_products = [
+                rng.choice(products)
+                for _ in range(line_count)
+            ]
+
+            product_delays = [
+                self._get_vendor_delay(vendor, product)
+                for product in selected_products
+            ]
+
+            min_delay_days = min(product_delays)
+
+            expected_arrival = order_date + timedelta(
+                days=min_delay_days
+            )
+
+            order_lines = []
+
+            for product in selected_products:
+
+                quantity = rng.randint(1, 2000)
+
+                price = rng.choice([
+                    10.0, 12.5, 15.0, 20.0, 25.0
+                ])
+
+                order_lines.append((0, 0, {
+                    "product_id": product.id,
+                    "name": product.display_name,
+                    "product_qty": quantity,
+                    "price_unit": price,
+                    "date_planned": expected_arrival,
+                    "product_uom": (
+                        product.uom_po_id.id or product.uom_id.id
+                    ),
+                }))
+
+            po = PurchaseOrder.with_user(manager).create({
+                "partner_id": vendor.id,
+                "origin": f"N1-{i}",
+                "date_order": order_date,
+                "order_line": order_lines,
+            })
+
+            
+            if rng.random() < 0.7:
+                po.with_user(manager).print_quotation()
+
+            po.with_user(manager).button_confirm()
+
+            for picking in po.picking_ids:
+
+                picking.with_user(manager).action_confirm()
+                picking.with_user(manager).action_assign()
+
+                for move in picking.move_ids_without_package:
+                    move.with_user(manager).quantity = (
+                        move.product_uom_qty
+                    )
+
+                picking.with_user(manager).button_validate()
+
+            action = po.with_user(manager).action_create_invoice()
+
+            bill = self.env["account.move"].with_user(
+                manager
+            ).browse(action["res_id"])
+
+            bill.with_user(manager).write({
+                "invoice_date": expected_arrival.date(),
+            })
+
+            bill.with_user(manager).action_post()
+
+            self.env["erp.runtime.trace"].sudo().search([
+                ("transaction_id", "=", po.name)
+            ]).write({
+                "flow_id": "N1",
+                "label": "normal",
+                "is_anomaly": False,
+                "dataset_id": dataset_id,
+                "generation_seed": generation_seed,
+                "variant_id": variant_id,
+                "release_version": "V1.0",
+            })
+
+        return True
+
 
 
     # Partial goods receipt

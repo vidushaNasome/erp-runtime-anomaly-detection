@@ -1,0 +1,30 @@
+name: ml-data-eval
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  odoo:
+    image: odoo:18
+    depends_on:
+      - db
+    ports:
+      - "8070:8069"
+    environment:
+      HOST: db
+      USER: odoo
+      PASSWORD: odoo
+    volumes:
+      - ./custom-addons:/mnt/extra-addons
+      - ./config:/etc/odoo
+
+volumes:
+  postgres_data:
