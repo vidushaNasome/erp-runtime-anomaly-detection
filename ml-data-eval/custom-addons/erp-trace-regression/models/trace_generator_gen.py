@@ -80,7 +80,7 @@ class ERPTraceGeneratorGeneralisation(models.AbstractModel):
                 raise ValueError('Partial receipt requires at least 2 units')
             partial_qty = rng.randint(1, qty - 1)
             self._gen_validate_receipt(picking.with_user(manager), partial_qty)
-            self._gen_mark_normal(po, 'N1', dataset_id, generation_seed,
+            self._gen_mark_normal(po, 'G1', dataset_id, generation_seed,
                                   variant_id or 'G_N1_PARTIAL_STOP')
         return True
 
@@ -103,7 +103,7 @@ class ERPTraceGeneratorGeneralisation(models.AbstractModel):
                 if not picking:
                     raise ValueError(f'No outstanding picking for {po.name}')
                 self._gen_validate_receipt(picking.with_user(manager), qty)
-            self._gen_mark_normal(po, 'N2', dataset_id, generation_seed,
+            self._gen_mark_normal(po, 'G2', dataset_id, generation_seed,
                                   variant_id or 'G_N2_THREE_PARTIAL')
         return True
 
@@ -125,7 +125,7 @@ class ERPTraceGeneratorGeneralisation(models.AbstractModel):
                     new_date = po.date_order + timedelta(
                         days=self._get_vendor_delay(current, line.product_id))
                     line.with_user(manager).write({'date_planned': new_date})
-            self._gen_mark_normal(po, 'N3', dataset_id, generation_seed,
+            self._gen_mark_normal(po, 'G3', dataset_id, generation_seed,
                                   variant_id or 'G_N3_FOUR_CHANGES')
         return True
 
@@ -145,7 +145,7 @@ class ERPTraceGeneratorGeneralisation(models.AbstractModel):
                     'date_planned': current_date})
             if rng.random() < 0.7:
                 po.with_user(rng.choice(users)).print_quotation()
-            self._gen_mark_normal(po, 'N4', dataset_id, generation_seed,
+            self._gen_mark_normal(po, 'G4', dataset_id, generation_seed,
                                   variant_id or 'G_N4_FIVE_RESCHEDULES')
         return True
 
@@ -180,6 +180,6 @@ class ERPTraceGeneratorGeneralisation(models.AbstractModel):
             bill = self.env['account.move'].with_user(manager).browse(bill_id)
             bill.write({'invoice_date': po.date_order.date()})
             bill.action_post()
-            self._gen_mark_normal(po, 'N5', dataset_id, generation_seed,
+            self._gen_mark_normal(po, 'G5', dataset_id, generation_seed,
                                   variant_id or 'G_N5_FOUR_LINES')
         return True

@@ -14,10 +14,7 @@ class TraceGeneratorWizard(models.TransientModel):
                 (f"n{i}", f"N{i} - Normal Scenario {i}")
                 for i in range(1, 6)
             ],
-            *[
-                (f"a{i}" , f"A{i} - Anomaly Scenario {i}")
-                for i in  range(1, 6)
-            ],
+            
         ],
         string="Scenario" ,
         required=False,
