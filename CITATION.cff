@@ -3,10 +3,10 @@ message: "If you use this repository or its experimental framework, please cite 
 type: software
 title: "Unsupervised Detection of Behavioural Regressions in ERP Systems from Field-Level Runtime Traces: A Controlled Evaluation in Odoo"
 authors:
-  - family-names: "PINNAGODA"
-    given-names: "VIDUSHA NASOME"
-  - family-names: "Second author"
-    given-names: "Second author"
+  - family-names: "Pinnagoda"
+    given-names: "Vidusha Nasome"
+  - family-names: "Singh"
+    given-names: "Raghubir"
 abstract: >-
   A controlled evaluation of unsupervised behavioural-regression detection
   using field-level runtime traces from synthetic procurement workflows in
