@@ -1,1 +1,22 @@
-
+cff-version: 1.2.0
+message: "If you use this repository or its experimental framework, please cite this work."
+type: software
+title: "Unsupervised Detection of Behavioural Regressions in ERP Systems from Field-Level Runtime Traces: A Controlled Evaluation in Odoo"
+authors:
+  - family-names: "Pinnagoda"
+    given-names: "Vidusha Nasome"
+  - family-names: "Singh"
+    given-names: "Raghubir"
+abstract: >-
+  A controlled evaluation of unsupervised behavioural-regression detection
+  using field-level runtime traces from synthetic procurement workflows in
+  Odoo Community Edition 18. The study compares an LSTM autoencoder,
+  Isolation Forest, Local Outlier Factor, and a one-class SVM.
+keywords:
+  - ERP
+  - Odoo
+  - behavioural regression
+  - anomaly detection
+  - runtime traces
+  - unsupervised learning
+license: MIT

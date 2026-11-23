@@ -1,0 +1,9 @@
+feature,distinct_values_in_A4,spearman_with_IF_score
+sequence_length,2,1.0
+write_count,2,1.0
+planned_date_change_count,2,1.0
+repeated_functions_count,2,1.0
+consecutive_function_repeats,2,1.0
+repeated_token_count,1,
+consecutive_token_repeats,1,
+unique_token_count,2,1.0

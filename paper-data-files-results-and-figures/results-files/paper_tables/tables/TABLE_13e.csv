@@ -1,0 +1,11 @@
+transaction_id,flagged,position,token,token_error
+P00193,True,12,manager:purchase:WRITE:purchase.order.line:date_planned:NO_DELAY>EXTRA_LONG_DELAY,13.890516
+P00193,True,13,accountant:account:WRITE:account.move:invoice_date:EMPTY>SET,3.2243857
+P00193,True,1,manager:purchase:CREATE:purchase.order.line:product_qty:LOW,2.9759665
+P00193,True,2,manager:purchase:CREATE:purchase.order.line:price_unit:LOW,1.0285046
+P00193,True,3,manager:purchase:CREATE:purchase.order.line:date_planned:NO_DELAY,0.53682107
+P00206,True,12,manager:purchase:WRITE:purchase.order.line:date_planned:NO_DELAY>EXTRA_LONG_DELAY,13.844702
+P00206,True,13,accountant:account:WRITE:account.move:invoice_date:EMPTY>SET,2.9771075
+P00206,True,1,manager:purchase:CREATE:purchase.order.line:product_qty:LOW,2.968641
+P00206,True,2,manager:purchase:CREATE:purchase.order.line:price_unit:MEDIUM,0.81459284
+P00206,True,3,manager:purchase:CREATE:purchase.order.line:date_planned:NO_DELAY,0.53135186

@@ -1,0 +1,16 @@
+scenario,has_oov,has_new_pair,unseen_tokens
+A1,1.0,1.0,"['manager:purchase:CREATE:purchase.order.line:product_qty:EXTREME', 'purchase_user:purchase:CREATE:purchase.order.line:product_qty:EXTREME']"
+A2,0.9,1.0,"['manager:purchase:WRITE:purchase.order.line:date_planned:NO_DELAY>EXTRA_LONG_DELAY', 'manager:purchase:WRITE:purchase.order.line:date_planned:SHORT_DELAY>EXTRA_LONG_DELAY']"
+A3,0.0,1.0,[]
+A4,0.0,1.0,[]
+A5,0.0,1.0,[]
+G1,0.0,0.0,[]
+G2,0.0,0.0,[]
+G3,0.0,0.0,[]
+G4,0.0,0.13333333333333333,[]
+G5,0.0,0.13333333333333333,[]
+N1,0.0,0.0,[]
+N2,0.0,0.0,[]
+N3,0.0,0.0,[]
+N4,0.0,0.0,[]
+N5,0.06666666666666667,0.06666666666666667,['manager:purchase:WRITE:purchase.order.line:product_qty:MEDIUM>LOW']
