@@ -1,0 +1,9 @@
+model,test_input,auc,G5_flagged,FP_G,FP_N
+LOF-count,full traces,0.9243333333333333,0,16,4
+LOF-count,cut at 27,0.8702444444444445,15,31,4
+LOF-pair,full traces,0.9881777777777777,1,2,2
+LOF-pair,cut at 27,0.9627555555555556,15,16,2
+OCSVM-pair,full traces,0.9108444444444443,14,32,0
+OCSVM-pair,cut at 27,0.8855555555555555,15,33,0
+IF-pair,full traces,0.5213777777777778,11,11,2
+IF-pair,cut at 27,0.5220444444444444,10,10,2

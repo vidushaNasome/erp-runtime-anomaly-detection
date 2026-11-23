@@ -1,0 +1,3 @@
+dataset,normal,anomalous,prevalence,generation_seeds,seeds_shared_with_train,scenarios_with_G,normal_token_sequences_also_in_train
+E5 5% (570N+30A),570,30,0.05,"[30, 31, 32]",[],False,0.5649122807017544
+E5 1% (2976N+30A),2976,30,0.00998003992015968,"[30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41]",[],False,0.5675403225806451

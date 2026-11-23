@@ -1,0 +1,9 @@
+,value
+transactions,300
+normal,150
+anomalous,150
+generation_seeds,[33]
+seeds_shared_with_train,[]
+seeds_shared_with_test1,[]
+transaction_ids_shared_with_test1,300
+same_scenario_counts_as_test1,True

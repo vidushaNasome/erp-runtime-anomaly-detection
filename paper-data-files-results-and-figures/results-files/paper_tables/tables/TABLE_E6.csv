@@ -1,0 +1,10 @@
+model,scores_identical,max_abs_score_diff,predictions_identical,roc_auc
+IF-eng,True,0.0,True,0.7295
+IF-count,True,0.0,True,0.6322
+IF-pair,True,0.0,True,0.5214
+LOF-count,True,0.0,True,0.9243
+LOF-pair,True,0.0,True,0.9882
+LOF-pair (no OOV),True,0.0,True,0.9022
+OCSVM-count,True,0.0,True,0.796
+OCSVM-pair,True,0.0,True,0.9108
+LSTM-AE,True,0.0,True,0.9033
